@@ -47,6 +47,20 @@ struct ErrorResponse {
     status: u16
 }
 
+#[derive(Deserialize, Debug)]
+pub struct TwilioMessage {
+    sid: String,
+    body: String,
+    from: String,
+    to: String,
+    date_sent: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TwilioResponse {
+    messages: Vec<TwilioMessage>,
+}
+
 pub struct AlertManager {
     twilio_account_sid: String,
     twilio_auth_token: String,
@@ -120,4 +134,30 @@ impl AlertManager {
 
         Ok(())
     }
+
+    pub fn fetch_twilio_messages(&self) -> Result<(), reqwest::Error> {
+        let url = format!(
+            "https://api.twilio.com/2010-04-01/Accounts/{}/Messages.json",
+            self.twilio_account_sid
+        );
+
+        let client = Client::new();
+        let response: TwilioResponse = client
+            .get(&url)
+            .basic_auth(&self.twilio_account_sid, Some(&self.twilio_auth_token))
+            .send()?
+            .json()?;
+
+        println!("Received messages:");
+        for message in response.messages {
+            println!(
+                "From: {}, To: {}, Date: {:?}, Body: {}",
+                message.from, message.to, message.date_sent, message.body
+            );
+        }
+
+        Ok(())
+    }
+
+
 }

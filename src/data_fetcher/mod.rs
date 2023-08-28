@@ -23,6 +23,20 @@ pub struct Forecast {
     Discussion: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CurrentObservation {
+    DateObserved: String,
+    HourObserved: i32,
+    LocalTimeZone: String,
+    ReportingArea: String,
+    StateCode: String,
+    Latitude: f64,
+    Longitude: f64,
+    ParameterName: String,
+    AQI: i32,
+    Category: Category,
+}
+
 pub struct DataFetcher {
     api_key: String,
 }
@@ -50,7 +64,25 @@ impl DataFetcher {
             vec![]
         };
 
-
         Ok(forecasts)
+    }
+
+    pub fn fetch_current_observation_by_zip(&self, zip_code: &str, distance: i32) -> Result<Vec<CurrentObservation>, Error> {
+        let url = format!(
+            "https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode={}&distance={}&API_KEY={}",
+            zip_code,
+            distance,
+            self.api_key
+        );
+
+        let response = reqwest::blocking::get(&url)?;
+
+        let observations = if response.status().is_success() {
+            response.json::<Vec<CurrentObservation>>()?
+        } else {
+            vec![]
+        };
+
+        Ok(observations)
     }
 }

@@ -14,7 +14,6 @@
 ## Supported Platforms
 
 - Linux
-- Raspberry Pi
 
 ## Installation
 
